@@ -7,10 +7,6 @@ import Signup from './pages/signup';
 import Signin from './pages/signin';
 import Header from './Components/Header';
 
-
-
-
-
 export default function App() {
   return (
     <BrowserRouter>
