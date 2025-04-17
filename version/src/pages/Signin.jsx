@@ -1,23 +1,24 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signInStart, signInFailure, signInSuccess } from '../redux/user/userslice';
+import { useDispatch, useSelector } from 'react-redux';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(''); // ✅ for showing error messages
+  const { loading, error } = useSelector((state) => state.user); // ✅ Correct spelling: loading (not loding)
+  const [message, setMessage] = useState('');
+  const dispatch = useDispatch(); // ✅ Add parentheses to call the hook
   const navigate = useNavigate();
+
   const handlechange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handlesubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(false);
-    setMessage('');
 
     try {
+      dispatch(signInStart());
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: {
@@ -27,19 +28,17 @@ export default function SignIn() {
       });
 
       const data = await res.json();
-      
-      setLoading(false);
 
       if (!res.ok) {
-        setError(true);
+        dispatch(signInFailure(data.message));
         setMessage(data.message || 'Something went wrong');
         return;
       }
-        navigate('/');
-      // Signup successful – handle success here if needed
+
+      dispatch(signInSuccess(data));
+      navigate('/');
     } catch (err) {
-      setLoading(false);
-      setError(true);
+      dispatch(signInFailure(err.message));
       setMessage('Server error, please try again later');
     }
   };
@@ -48,7 +47,6 @@ export default function SignIn() {
     <div className='p-3 max-w-lg mx-auto'>
       <h1 className='text-3xl text-center font-semibold my-7'>Sign In</h1>
       <form onSubmit={handlesubmit} className='flex flex-col gap-4'>
-     
         <input
           type='email'
           placeholder='Email'
@@ -72,13 +70,12 @@ export default function SignIn() {
       </form>
 
       <div className='flex gap-2 mt-6'>
-        <p> Dont Have an account?</p>
-        <Link to='/signUp'>
+        <p>Don't have an account?</p>
+        <Link to='/signup'> {/* ✅ Lowercase to match your route path */}
           <span className='text-blue-500'>Sign Up</span>
         </Link>
       </div>
 
-      {/* ✅ Show custom error message */}
       {error && <p className='text-red-500 mt-4'>{message}</p>}
     </div>
   );
